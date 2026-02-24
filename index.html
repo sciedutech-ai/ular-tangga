@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Perjalanan Cinta Ashdaq & Ambar 💖</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --primary: #FF4B8C;
+            --secondary: #FF8BA7;
+            --dark: #4A154B;
+            --glass-bg: rgba(255, 255, 255, 0.25);
+            --glass-border: rgba(255, 255, 255, 0.5);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: radial-gradient(circle at 50% 50%, #FF9A9E 0%, #FECFEF 99%, #FECFEF 100%);
+            color: var(--dark);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* --- UI UTAMA --- */
+        .ui-layer {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+            z-index: 10;
+        }
+
+        .top-bar { display: flex; justify-content: space-between; pointer-events: auto; }
+
+        .profile-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 2px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 10px 20px;
+            display: flex; align-items: center; gap: 15px;
+            box-shadow: 0 8px 32px rgba(255, 75, 140, 0.2);
+            transition: transform 0.3s;
+        }
+
+        .profile-card.active {
+            transform: scale(1.1);
+            border-color: var(--primary);
+            box-shadow: 0 0 20px var(--primary);
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        .avatar {
+            width: 50px; height: 50px;
+            background: white; border-radius: 50%;
+            border: 3px solid var(--primary);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px;
+        }
+
+        .bottom-bar {
+            display: flex; flex-direction: column; align-items: center;
+            gap: 15px; pointer-events: auto; padding-bottom: 20px;
+        }
+
+        .turn-indicator {
+            background: var(--glass-bg); padding: 5px 20px;
+            border-radius: 20px; font-weight: 900; color: var(--primary);
+            backdrop-filter: blur(5px); border: 1px solid white;
+        }
+
+        /* --- BUTTONS --- */
+        .btn-action {
+            background: linear-gradient(135deg, #FF4B8C, #FF758C);
+            border: none; border-radius: 25px; padding: 15px 40px;
+            color: white; font-family: 'Nunito', sans-serif; font-weight: 900; font-size: 1.5rem;
+            cursor: pointer; box-shadow: 0 10px 20px rgba(255, 75, 140, 0.4), inset 0 -4px 0 rgba(0,0,0,0.2);
+            transition: all 0.2s; text-transform: uppercase; letter-spacing: 2px;
+        }
+        .btn-action:hover:not(:disabled) { transform: translateY(-5px) scale(1.05); }
+        .btn-action:active:not(:disabled) { transform: translateY(2px) scale(0.95); }
+        .btn-action:disabled { filter: grayscale(1); cursor: not-allowed; opacity: 0.5; }
+
+        .btn-skill {
+            background: linear-gradient(135deg, #FF9A9E, #FECFEF); color: var(--dark);
+            font-size: 1rem; padding: 10px 25px; box-shadow: 0 5px 15px rgba(255, 154, 158, 0.6);
+        }
+
+        /* --- ANIMASI DADU --- */
+        .dice-container {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            width: 120px; height: 120px; background: white; border-radius: 25px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 4rem; font-weight: 900; color: var(--primary);
+            box-shadow: 0 20px 50px rgba(255,75,140,0.5), inset 0 -10px 0 rgba(255,200,220,0.5);
+            z-index: 100; transition: transform 0.3s, opacity 0.3s; opacity: 0;
+        }
+        .dice-container.rolling {
+            animation: diceRollAnim 0.8s ease-in-out;
+            opacity: 1; transform: translate(-50%, -50%) scale(1);
+        }
+
+        @keyframes diceRollAnim {
+            0% { transform: translate(-50%, -50%) scale(0) rotate(0deg); }
+            20% { transform: translate(-50%, -50%) scale(1.5) rotate(180deg); }
+            50% { transform: translate(-50%, -50%) scale(1.2) rotate(360deg); }
+            80% { transform: translate(-50%, -50%) scale(1.4) rotate(540deg); }
+            100% { transform: translate(-50%, -50%) scale(1) rotate(720deg); }
+        }
+
+        #gameCanvas {
+            background: rgba(255, 255, 255, 0.4); border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(255,75,140,0.3), 0 0 0 10px white;
+            max-width: 95vw; max-height: 70vh;
+        }
+
+        .bubble-enter { animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        .bubble-exit { animation: popOut 0.3s ease-in forwards; }
+
+        @keyframes popIn { 0% { opacity: 0; transform: scale(0.5); } 100% { opacity: 1; transform: scale(1); } }
+        @keyframes popOut { 0% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(0.5); } }
+    </style>
+</head>
+<body>
+
+    <div id="startScreen" class="absolute inset-0 z-[300] bg-pink-100 flex flex-col items-center justify-center p-6 text-center">
+        <h1 class="text-4xl font-extrabold text-pink-500 mb-2">Selamat Datang! 💕</h1>
+        <p class="text-lg text-pink-400 mb-8 font-semibold" id="welcomeText">Memuat koneksi ke pasanganmu...</p>
+        <button id="btnStartGame" class="btn-action hidden">Mulai Perjalanan Cinta</button>
+    </div>
+
+    <div class="ui-layer">
+        <div class="top-bar">
+            <div class="profile-card" id="card-p0">
+                <div class="avatar">👦</div>
+                <div>
+                    <div style="font-weight: 900;">Ashdaq</div>
+                    <div style="font-size: 12px; color: var(--primary);">Kotak: <span id="pos-p0">1</span></div>
+                </div>
+            </div>
+            <div class="profile-card" id="card-p1">
+                <div>
+                    <div style="font-weight: 900; text-align: right;">Ambar</div>
+                    <div style="font-size: 12px; color: var(--primary); text-align: right;">Kotak: <span id="pos-p1">1</span></div>
+                </div>
+                <div class="avatar">👧</div>
+            </div>
+        </div>
+
+        <div class="bottom-bar">
+            <div class="turn-indicator" id="turn-text">Menunggu pemain...</div>
+            <div style="display: flex; gap: 15px;">
+                <button class="btn-action btn-skill" id="btnSkill">💌 Beri Rayuan</button>
+                <button class="btn-action" id="btnRoll">🎲 LEMPAR DADU</button>
+            </div>
+            <button id="btnReset" class="text-xs text-pink-500 underline mt-2">Reset Permainan (Mulai dari 1)</button>
+        </div>
+    </div>
+
+    <div id="rayuanModal" class="hidden absolute inset-0 z-[200] flex items-center justify-center bg-black/40 backdrop-blur-sm">
+        <div id="rayuanBox" class="bg-white/95 p-8 rounded-[30px] max-w-sm text-center shadow-2xl border-4 border-pink-200 m-4">
+            <div class="text-5xl mb-4 animate-bounce">💌</div>
+            <h3 class="text-2xl font-bold text-pink-500 mb-4" id="rayuanTitle">Surat Cinta</h3>
+            <p id="rayuanText" class="text-lg text-gray-700 font-semibold italic mb-6 leading-relaxed">...</p>
+            <button id="btnCloseRayuan" class="w-full px-6 py-3 bg-gradient-to-r from-pink-400 to-rose-400 text-white rounded-full font-bold shadow-lg hover:scale-105 transition-transform">
+                Awww 🥰
+            </button>
+        </div>
+    </div>
+
+    <div class="dice-container" id="diceEl">?</div>
+    <canvas id="gameCanvas" width="600" height="600"></canvas>
+
+    <script type="module">
+        // 1. IMPORT FIREBASE DARI CDN
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, set, onValue, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        // 2. KONFIGURASI FIREBASE KAMU
+        const firebaseConfig = {
+            apiKey: "AIzaSyBDjW_4qie9DUhB0PI3BwtpzWWsQ0P3M6c",
+            authDomain: "sciedugame-62224.firebaseapp.com",
+            databaseURL: "https://sciedugame-62224-default-rtdb.firebaseio.com",
+            projectId: "sciedugame-62224",
+            storageBucket: "sciedugame-62224.firebasestorage.app",
+            messagingSenderId: "580835795740",
+            appId: "1:580835795740:web:1b01b4ac1be467dc2890d9"
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const gameRef = ref(db, 'room/cinta_kita');
+
+        // 3. IDENTIFIKASI PEMAIN DARI URL (Contoh: index.html?p=0 untuk Ashdaq)
+        const urlParams = new URLSearchParams(window.location.search);
+        // Default ke 0 (Ashdaq) jika tidak ada parameter
+        const myPlayerId = urlParams.has('p') ? parseInt(urlParams.get('p')) : 0; 
+        
+        // 4. KATALOG RAYUAN TERPISAH
+        const rayuanUntukAmbar = [
+            "Ambar, senyummu mengalahkan manisnya takjil buka puasa.",
+            "Tahu nggak bedanya kamu sama jam 12 siang? Kalau jam 12 itu kesiangan, kalau kamu kesayangan Ashdaq.",
+            "Cintaku ke kamu kayak muter dadu ini, nggak ada berhentinya.",
+            "Ambar, cintaku padamu lebih asyik dari irama dangdut koplo mana pun! Tarik sis, semongko!",
+            "Kalau aku disuruh milih harta atau kamu, jelas aku milih kamu. Karena kamu harta karunku.",
+            "Aku rela jadi ular di game ini, asalkan yang aku patuk cuma hati kamu biar cinta terus.",
+            "Setiap angka di dadu ini nggak ada yang seberuntung diriku karena bisa dapetin Ambar."
+            // (Kamu bisa tambahkan 90+ rayuan lainnya di sini nanti)
+        ];
+
+        const rayuanUntukAshdaq = [
+            "Ashdaq, makasih ya udah selalu sabar ngadepin aku yang kadang random ini.",
+            "Kamu tahu nggak? Lihat nama kamu di notif HP aja udah bikin aku senyum-senyum sendiri.",
+            "Dadu ini mungkin acak, tapi perasaanku ke kamu itu pasti, Ashdaq.",
+            "Ashdaq sayang, semangat terus ya kerjanya! Ada aku yang selalu dukung kamu dari sini.",
+            "Aku nggak jago main game, tapi kalau urusan sayang sama kamu, aku berani diadu.",
+            "Tahu nggak, Ashdaq? Pundak kamu itu tempat paling nyaman buat aku nyender.",
+            "Ashdaq, kamu tuh kayak wifi. Kalau deket rasanya kenceng banget detak jantungku."
+            // (Tambahkan rayuan dari Ambar di sini)
+        ];
+
+        // 5. SETUP AUDIO & UI AWAL
+        const bgMusic = new Audio('sayangku.mp3');
+        bgMusic.loop = true;
+        
+        document.getElementById('welcomeText').innerText = `Halo, ${myPlayerId === 0 ? 'Ashdaq 👦' : 'Ambar 👧'}! Siap main bareng?`;
+        document.getElementById('btnStartGame').classList.remove('hidden');
+
+        document.getElementById('btnStartGame').addEventListener('click', () => {
+            document.getElementById('startScreen').classList.add('hidden');
+            bgMusic.play().catch(e => console.log("Audio play failed", e));
+        });
+
+        // 6. ENGINE GAME (Sama seperti sebelumnya, dibungkus agar aman)
+        const CONFIG = { cols: 10, rows: 10, tileSize: 60, colors: { board1: '#FFF0F5', board2: '#FFE4E1' }};
+        const SNAKES_LADDERS = { 4:14, 9:31, 20:38, 28:84, 40:59, 51:67, 71:91, 17:7, 54:34, 62:19, 64:60, 87:24, 93:73, 95:75, 99:78 };
+
+        class Board { /* ... (Logika gambar papan sama seperti sebelumnya) ... */ 
+            constructor(ctx) { this.ctx = ctx; }
+            getTilePos(index) {
+                let row = Math.floor((index - 1) / CONFIG.cols);
+                let col = (index - 1) % CONFIG.cols;
+                if (row % 2 !== 0) col = CONFIG.cols - 1 - col;
+                let x = col * CONFIG.tileSize; let y = (CONFIG.rows - 1 - row) * CONFIG.tileSize;
+                return { x: x + CONFIG.tileSize/2, y: y + CONFIG.tileSize/2 };
+            }
+            draw() {
+                this.ctx.save();
+                for (let i = 1; i <= 100; i++) {
+                    let color = (Math.floor((i-1)/CONFIG.cols) + (i-1)%CONFIG.cols) % 2 === 0 ? CONFIG.colors.board1 : CONFIG.colors.board2;
+                    let pos = this.getTilePos(i);
+                    this.ctx.fillStyle = color; this.ctx.beginPath();
+                    this.ctx.roundRect(pos.x - 30 + 2, pos.y - 30 + 2, 56, 56, 12); this.ctx.fill();
+                    this.ctx.fillStyle = 'rgba(255, 75, 140, 0.4)'; this.ctx.font = 'bold 16px Nunito';
+                    this.ctx.textAlign = 'center'; this.ctx.textBaseline = 'middle'; this.ctx.fillText(i, pos.x, pos.y);
+                }
+                this.ctx.restore();
+                this.drawSnakesAndLadders();
+            }
+            drawSnakesAndLadders() {
+                this.ctx.save(); this.ctx.lineCap = 'round';
+                for (const [start, end] of Object.entries(SNAKES_LADDERS)) {
+                    let sPos = this.getTilePos(parseInt(start)); let ePos = this.getTilePos(end);
+                    let isLadder = end > start;
+                    this.ctx.shadowBlur = 15; this.ctx.shadowColor = isLadder ? '#4CAF50' : '#FF3366';
+                    this.ctx.beginPath(); this.ctx.moveTo(sPos.x, sPos.y);
+                    let cpX = (sPos.x + ePos.x) / 2 + (isLadder ? 30 : -30); let cpY = (sPos.y + ePos.y) / 2;
+                    this.ctx.quadraticCurveTo(cpX, cpY, ePos.x, ePos.y);
+                    this.ctx.lineWidth = 5; this.ctx.strokeStyle = isLadder ? 'rgba(76, 175, 80, 0.8)' : 'rgba(255, 51, 102, 0.8)';
+                    this.ctx.setLineDash([10, 15]); this.ctx.stroke();
+                }
+                this.ctx.restore();
+            }
+        }
+
+        class Player {
+            constructor(board, name, avatar, offsetX, playerId) {
+                this.board = board; this.name = name; this.avatar = avatar;
+                this.offsetX = offsetX; this.id = playerId;
+                this.currentTile = 1; this.pos = this.board.getTilePos(1);
+                this.isMoving = false; this.moveQueue = []; this.bounceOffset = 0;
+            }
+            moveTo(target) {
+                if (target > 100) target = 100;
+                let stepDir = target > this.currentTile ? 1 : -1;
+                for (let i = this.currentTile + stepDir; i !== target + stepDir; i += stepDir) {
+                    this.moveQueue.push(i);
+                }
+                this.isMoving = true;
+            }
+            teleportTo(target) {
+                this.currentTile = target; this.pos = this.board.getTilePos(target);
+                spawnParticles(this.pos.x + this.offsetX, this.pos.y, '#FF4B8C');
+                document.getElementById(`pos-p${this.id}`).innerText = this.currentTile;
+            }
+            update(dt) {
+                if (!this.isMoving) { this.bounceOffset = Math.sin(Date.now() / 200 + this.offsetX) * 3; return; }
+                if (this.moveQueue.length > 0) {
+                    let nextTile = this.moveQueue[0];
+                    let targetPos = this.board.getTilePos(nextTile);
+                    let dx = targetPos.x - this.pos.x; let dy = targetPos.y - this.pos.y;
+                    let dist = Math.sqrt(dx*dx + dy*dy); let speed = 250 * (dt/1000);
+                    if (dist < speed) {
+                        this.pos.x = targetPos.x; this.pos.y = targetPos.y;
+                        this.currentTile = nextTile; this.moveQueue.shift();
+                        spawnParticles(this.pos.x + this.offsetX, this.pos.y, '#FF8BA7', 2);
+                        document.getElementById(`pos-p${this.id}`).innerText = this.currentTile;
+                    } else {
+                        this.pos.x += (dx / dist) * speed; this.pos.y += (dy / dist) * speed;
+                        this.bounceOffset = -Math.sin((dist/CONFIG.tileSize) * Math.PI) * 15;
+                    }
+                } else {
+                    this.isMoving = false; this.bounceOffset = 0;
+                    handlePlayerStopped(this); // Cek ular tangga setelah berhenti
+                }
+            }
+            draw(ctx) {
+                ctx.save(); ctx.translate(this.pos.x + this.offsetX, this.pos.y + this.bounceOffset);
+                ctx.beginPath(); ctx.ellipse(0, 20 - this.bounceOffset, 12, 4, 0, 0, Math.PI*2);
+                ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.fill();
+                ctx.font = '32px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.fillText(this.avatar, 0, 0); ctx.restore();
+            }
+        }
+
+        let particles = [];
+        function spawnParticles(x, y, color, count = 10) {
+            for(let i=0; i<count; i++) particles.push({ x: x, y: y, vx: (Math.random() - 0.5) * 8, vy: (Math.random() - 0.5) * 8 - 2, life: 1.0, color: color, size: Math.random() * 5 + 2 });
+        }
+        function updateAndDrawParticles(ctx, dt) {
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i]; p.x += p.vx; p.y += p.vy; p.vy += 0.2; p.life -= dt / 1000;
+                if (p.life <= 0) { particles.splice(i, 1); continue; }
+                ctx.globalAlpha = p.life; ctx.fillStyle = p.color; ctx.beginPath();
+                ctx.roundRect(p.x, p.y, p.size, p.size, 2); ctx.fill();
+            }
+            ctx.globalAlpha = 1.0;
+        }
+
+        const canvas = document.getElementById('gameCanvas'); const ctx = canvas.getContext('2d');
+        let board = new Board(ctx);
+        let players = [ new Player(board, 'Ashdaq', '👦', -12, 0), new Player(board, 'Ambar', '👧', 12, 1) ];
+        
+        let turn = 0; let gameState = 'IDLE'; let lastTime = 0;
+
+        // --- SINKRONISASI FIREBASE ---
+        onValue(gameRef, (snapshot) => {
+            const data = snapshot.val();
+            if (!data) return; // DB masih kosong
+
+            // 1. Sinkronisasi Posisi Teleport (Kalo ada yang baru masuk/refresh)
+            if (data.p0_pos && players[0].currentTile !== data.p0_pos && !players[0].isMoving) players[0].teleportTo(data.p0_pos);
+            if (data.p1_pos && players[1].currentTile !== data.p1_pos && !players[1].isMoving) players[1].teleportTo(data.p1_pos);
+
+            // 2. Sinkronisasi Giliran (Turn)
+            turn = data.turn || 0;
+            document.getElementById('card-p0').classList.toggle('active', turn === 0);
+            document.getElementById('card-p1').classList.toggle('active', turn === 1);
+            document.getElementById('turn-text').innerText = `Giliran: ${turn === 0 ? 'Ashdaq 👦' : 'Ambar 👧'}`;
+            
+            // Kunci tombol kalau bukan giliran kita
+            if (turn !== myPlayerId || gameState !== 'IDLE') {
+                document.getElementById('btnRoll').disabled = true;
+                document.getElementById('btnSkill').disabled = true;
+            } else {
+                document.getElementById('btnRoll').disabled = false;
+                document.getElementById('btnSkill').disabled = false;
+            }
+
+            // 3. Terima Event Baru dari Lawan (Animasi Dadu / Rayuan)
+            if (data.lastEvent && data.lastEvent.id !== window.lastProcessedEventId) {
+                window.lastProcessedEventId = data.lastEvent.id;
+                
+                if (data.lastEvent.type === 'ROLL') {
+                    // Mainkan animasi dadu dari database
+                    playDiceAnimation(data.lastEvent.dice, () => {
+                        players[data.lastEvent.player].moveTo(players[data.lastEvent.player].currentTile + data.lastEvent.dice);
+                    });
+                } 
+                else if (data.lastEvent.type === 'RAYUAN') {
+                    showRayuanModal(data.lastEvent.player, data.lastEvent.text);
+                }
+            }
+        });
+
+        // FUNGSI UTAMA GAME
+        function rollDice() {
+            if (turn !== myPlayerId || gameState !== 'IDLE') return;
+            gameState = 'ROLLING';
+            
+            let result = Math.floor(Math.random() * 6) + 1;
+            
+            // Kirim ke Firebase bahwa aku melempar dadu
+            set(gameRef, {
+                turn: turn, // Masih giliranku sampai aku selesai gerak
+                p0_pos: players[0].currentTile,
+                p1_pos: players[1].currentTile,
+                lastEvent: {
+                    id: Date.now(),
+                    type: 'ROLL',
+                    player: myPlayerId,
+                    dice: result
+                }
+            });
+        }
+
+        function playDiceAnimation(result, onComplete) {
+            gameState = 'ROLLING';
+            let diceEl = document.getElementById('diceEl');
+            
+            diceEl.style.opacity = '1'; diceEl.classList.remove('rolling');
+            void diceEl.offsetWidth; diceEl.classList.add('rolling');
+
+            let rollInterval = setInterval(() => { diceEl.innerHTML = Math.floor(Math.random() * 6) + 1; }, 100);
+
+            setTimeout(() => {
+                clearInterval(rollInterval); diceEl.innerHTML = result;
+                setTimeout(() => {
+                   diceEl.classList.remove('rolling'); diceEl.style.opacity = '0';
+                   gameState = 'MOVING';
+                   onComplete();
+                }, 1000);
+            }, 800);
+        }
+
+        function handlePlayerStopped(p) {
+            // Cek Ular Tangga
+            if (SNAKES_LADDERS[p.currentTile]) {
+                setTimeout(() => {
+                    let target = SNAKES_LADDERS[p.currentTile];
+                    let isLadder = target > p.currentTile;
+                    if(isLadder) alert(`Asik! ${p.name} dapet Kejutan Romantis! Naik ke ${target} 💕`);
+                    else alert(`Yah... ${p.name} harus turun ke ${target} 💔`);
+                    
+                    p.teleportTo(target);
+                    checkWinOrSwitchTurn(p);
+                }, 500);
+            } else {
+                checkWinOrSwitchTurn(p);
+            }
+        }
+
+        function checkWinOrSwitchTurn(p) {
+            if (p.currentTile === 100) {
+                gameState = 'ENDED';
+                spawnParticles(p.pos.x, p.pos.y, '#FF4B8C', 100);
+                alert(`🎉 SELAMAT! ${p.name} memenangkan hati seutuhnya! 🎉`);
+            } else {
+                // Selesai gerak, oper giliran ke musuh via Firebase (HANYA JIKA INI HP KITA YANG BERGERAK)
+                if (p.id === myPlayerId) {
+                    let nextTurn = (myPlayerId + 1) % 2;
+                    gameState = 'IDLE';
+                    set(gameRef, {
+                        turn: nextTurn,
+                        p0_pos: players[0].currentTile,
+                        p1_pos: players[1].currentTile,
+                        lastEvent: { id: Date.now(), type: 'END_TURN', player: myPlayerId }
+                    });
+                } else {
+                    gameState = 'IDLE'; // Mereset state di HP yang nonton
+                }
+            }
+        }
+
+        function useLoveSkill() {
+            if (turn !== myPlayerId || gameState !== 'IDLE') return;
+            
+            // Tentukan teks berdasarkan siapa yang mengirim
+            let randomText = "";
+            if (myPlayerId === 0) { // Ashdaq ke Ambar
+                randomText = rayuanUntukAmbar[Math.floor(Math.random() * rayuanUntukAmbar.length)];
+            } else { // Ambar ke Ashdaq
+                randomText = rayuanUntukAshdaq[Math.floor(Math.random() * rayuanUntukAshdaq.length)];
+            }
+
+            // Kirim pop-up ini ke Firebase agar HP sebelah juga muncul
+            set(gameRef, {
+                turn: turn, // Giliran belum berubah, cuma kirim pesan
+                p0_pos: players[0].currentTile,
+                p1_pos: players[1].currentTile,
+                lastEvent: {
+                    id: Date.now(),
+                    type: 'RAYUAN',
+                    player: myPlayerId,
+                    text: randomText
+                }
+            });
+        }
+
+        function showRayuanModal(senderId, text) {
+            let senderName = senderId === 0 ? 'Ashdaq 👦' : 'Ambar 👧';
+            spawnParticles(players[senderId].pos.x + players[senderId].offsetX, players[senderId].pos.y, '#FF4B8C', 30);
+            
+            const modal = document.getElementById('rayuanModal');
+            const box = document.getElementById('rayuanBox');
+            document.getElementById('rayuanTitle').innerText = `Pesan dari ${senderName} 💌`;
+            document.getElementById('rayuanText').innerText = `"${text}"`;
+            
+            modal.classList.remove('hidden');
+            box.classList.remove('bubble-exit'); box.classList.add('bubble-enter');
+        }
+
+        // --- BIND EVENTS ---
+        document.getElementById('btnRoll').addEventListener('click', rollDice);
+        document.getElementById('btnSkill').addEventListener('click', useLoveSkill);
+        document.getElementById('btnCloseRayuan').addEventListener('click', () => {
+            const box = document.getElementById('rayuanBox');
+            box.classList.remove('bubble-enter'); box.classList.add('bubble-exit');
+            setTimeout(() => { document.getElementById('rayuanModal').classList.add('hidden'); }, 300);
+        });
+        document.getElementById('btnReset').addEventListener('click', () => {
+            if(confirm("Yakin mau ulang dari awal?")) {
+                set(gameRef, { turn: 0, p0_pos: 1, p1_pos: 1, lastEvent: { id: Date.now(), type: 'RESET' }});
+            }
+        });
+
+        // LOOP RENDER
+        function gameLoop(timestamp) {
+            let dt = timestamp - lastTime; lastTime = timestamp;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            board.draw();
+            players.forEach(p => { p.update(dt); p.draw(ctx); });
+            updateAndDrawParticles(ctx, dt);
+            requestAnimationFrame(gameLoop);
+        }
+        requestAnimationFrame(gameLoop);
+    </script>
+</body>
+</html>
